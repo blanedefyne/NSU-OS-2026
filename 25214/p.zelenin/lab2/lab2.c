@@ -17,7 +17,7 @@ int main() {
         exit(EXIT_FAILURE);
     }    
 
-    char* result = ctime_r(&t, buf, MIN_BUFLEN;
+    char* result = ctime_r(&t, buf, MIN_BUFLEN);
     if (result == NULL) {
         perror("ctime_r() func caused an error - ");
         exit(EXIT_FAILURE);

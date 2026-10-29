@@ -1,114 +1,88 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
+#define LEN 2
 
-#define BUF_LEN 20
-#define READBUF_LEN 20
+void makeNewlinesCount(int fd, off_t** newlinesBuffer, int* linesCount, int* capacity) {
+    int nextLine = 2;
+    ssize_t charCount = 0;
+    char* buffer = (char*)malloc(sizeof(char) * LEN);
 
-void makeLinesTable(int fd, off_t *count, int *count_n, off_t *buf_n, int* maxLen) {
-    int len = 0;
-    buf_n[0] = -1;
-    char *readBuffer = (char *) malloc(sizeof(char) * READBUF_LEN);
-    if (readBuffer == NULL) {
-        perror("Memory allocation error (readBuffer) ");
+    if (buffer == NULL) {
+        perror("malloc() caused an error - buffer ");
         exit(EXIT_FAILURE);
     }
-    int capacity_n = BUF_LEN;
-    ssize_t readBytes;
-    while ((readBytes = read(fd, readBuffer, READBUF_LEN)) > 0) {
-        for (ssize_t i = 0; i < readBytes; ++i) {
-            if (*(count_n) >= capacity_n) {
-                buf_n = (off_t *) realloc(buf_n, sizeof(off_t) * capacity_n * 2);
-                capacity_n *= 2;
+
+    ssize_t charsRead;
+    while ((charsRead = read(fd, buffer, LEN)) != 0) {
+        charCount += charsRead;
+        for (ssize_t i = 0; i < charsRead; i++) {
+            if (nextLine >= (*capacity)) {
+                (*newlinesBuffer) = (off_t*)realloc(*newlinesBuffer, sizeof(off_t) * (*capacity) * 2);
+                (*capacity) *= 2;
             }
-            if (readBuffer[i] == '\n') {
-                buf_n[++*(count_n)] = *(count) + (off_t) i;
-                (*maxLen) = *(maxLen) < len ? len : *(maxLen);
-                len = 0;
-            }
-            else {
-                len++;
+            if (buffer[i] == '\n') {
+                (*linesCount)++;
+                (*newlinesBuffer)[nextLine++] = charCount - (charsRead - i) + 1;
             }
         }
-        *(count) += (off_t) readBytes;
-    }
-    if (readBytes < 0) {
-        perror("read() caused an error ");
-        exit(EXIT_FAILURE);
     }
 
-    buf_n[++*(count_n)] = *(count);
-    free(readBuffer);
+    if (charsRead < 0) {
+        perror("read() caused an error - charsRead ");
+        exit(EXIT_FAILURE);
+    }
 }
 
-
 int main(int argc, char* argv[]) {
-    int fd, count_n = 0, maxLen = 0;
-    off_t count = 0;
-    int capacity = BUF_LEN;
-    int line;
-    char* buf = (char*)malloc(sizeof(char) * BUF_LEN);
-    off_t* buf_n = (off_t*)calloc(BUF_LEN, sizeof(off_t));
+    int fd;
+    off_t* linesBuffer = (off_t*)calloc(LEN, sizeof(off_t));
+    int capacity = LEN;
 
-    if (buf == NULL) {
-        perror("Memory allocation error (buf) ");
+    if ((fd = open(argv[1], O_RDONLY)) == -1) {
+        perror("Could not open the file ");
         exit(EXIT_FAILURE);
     }
 
-    if (buf_n == NULL) {
-        perror("Memory allocation error (buf_n) ");
-        exit(EXIT_FAILURE);
-    }
+    int linesCount = 0;
+    makeNewlinesCount(fd, &linesBuffer, &linesCount, &capacity);
 
-    if (((fd = open(argv[1], O_RDONLY)) == -1)) {
-        perror("Could not open the file - ");
-        exit(EXIT_FAILURE);
-    }
-
-    makeLinesTable(fd, &count, &count_n, buf_n, &maxLen);
-
-    if (capacity < maxLen) {
-        buf = (char* ) realloc(buf, sizeof(char) * (maxLen + 1));
-        if (buf == NULL) {
-            perror("realloc() caused an error (buf) ");
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    int c;
     while (1) {
         printf("Enter the line number - ");
-
-        if ((scanf("%d", &line) != 1) || ((c = getchar()) != '\n')) {
-            while ((c = getchar()) != '\n');
-            printf("Could not read the line number\n");
+        
+        int line;
+        if (scanf("%d", &line) != 1) {
+            printf("Could not read the number of the line\n");
             continue;
         }
-        if (line >= count_n || line < 0) {
+
+        if (line < 0 || linesCount < line) {
             printf("There's no such line\n");
             continue;
         }
+
         if (line == 0) {
             break;
         }
 
-        size_t len = buf_n[line] - buf_n[line - 1] - 1;
-        if (lseek(fd, buf_n[line - 1] + 1, SEEK_SET) == -1) {
-            perror("lseek() caused an error trying to get the line-");
+        off_t offset = linesBuffer[line];
+        if (lseek(fd, offset, SEEK_SET) == -1) {
+            perror("lseek() caused an error");
             exit(EXIT_FAILURE);
         }
-        if (read(fd, buf, len) != (ssize_t)len) {
-            perror("read() caused an error (line reading)");
+
+        ssize_t len = linesBuffer[line + 1] - linesBuffer[line];
+        char* readLineBuffer = (char*)malloc(sizeof(char) * (len + 1)); // +1 for \0
+        if (read(fd, readLineBuffer, len) == -1) {
+            perror("read failed - tried to read one line");
             exit(EXIT_FAILURE);
         }
-        buf[len] = '\0';
-        printf("%s\n", buf);
+
+        readLineBuffer[len - 1] = '\0';
+        printf("%s\n", readLineBuffer);
+
     }
 
-    free(buf_n);
-    free(buf);
-    close(fd);
-    exit(EXIT_SUCCESS);
+
 }

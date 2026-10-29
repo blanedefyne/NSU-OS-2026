@@ -33,6 +33,7 @@ void makeNewlinesCount(int fd, off_t** newlinesBuffer, int* linesCount, int* cap
         perror("read() caused an error - charsRead ");
         exit(EXIT_FAILURE);
     }
+    free(buffer);
 }
 
 int main(int argc, char* argv[]) {

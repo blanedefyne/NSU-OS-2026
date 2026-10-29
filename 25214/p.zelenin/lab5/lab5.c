@@ -81,8 +81,12 @@ int main(int argc, char* argv[]) {
 
         readLineBuffer[len - 1] = '\0';
         printf("%s\n", readLineBuffer);
+        free(readLineBuffer);
 
     }
 
+    free(linesBuffer);
+    close(fd);
+    exit(EXIT_SUCCESS);
 
 }

@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
         char* readLineBuffer = (char*)malloc(sizeof(char) * (len + 1)); // +1 for \0
         ssize_t bytesRead = 0;
         while (bytesRead < len) {
-            bytesRead += read(fd, readLineBuffer, len);
+            bytesRead += read(fd, readLineBuffer, len - bytesRead);
             if (bytesRead == -1) {
                 perror("read() caused an error - tried to read a line");
                 exit(EXIT_FAILURE);

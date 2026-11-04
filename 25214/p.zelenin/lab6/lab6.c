@@ -24,7 +24,8 @@ void makeNewlinesCount(int fd, off_t** newlinesBuffer, int* linesCount, int* cap
     ssize_t charsRead;
     while ((charsRead = read(fd, buffer, LEN)) != 0) {
         charCount += charsRead;
-        for (ssize_t i = 0; i < charsRead; i++) {
+        ssize_t i;
+        for (i = 0; i < charsRead; i++) {
             if (nextLine >= (*capacity)) {
                 (*newlinesBuffer) = (off_t*)realloc(*newlinesBuffer, sizeof(off_t) * (*capacity) * 2);
                 (*capacity) *= 2;
@@ -58,8 +59,8 @@ void handler(int sig) {
         if (handlerBytes == 0) { //if it's the end of file 
             break;
         }
-        handlerBytes = 0;
-        write(STDOUT_FILENO, handlerBuf, LEN);
+        write(STDOUT_FILENO, handlerBuf, handlerBytes);
+        handlerBytes = 0;  
     }
     if (handlerBytes < 0) {
         write(STDERR_FILENO, "handler's read() caused an error\n", ERROR_LENGTH - 1);

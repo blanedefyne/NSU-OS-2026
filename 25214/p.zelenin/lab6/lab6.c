@@ -66,7 +66,7 @@ void handler(int sig) {
         write(STDERR_FILENO, "handler's read() caused an error\n", ERROR_LENGTH - 1);
         _exit(EXIT_FAILURE);
     }
-    _exit(EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char* argv[]) {

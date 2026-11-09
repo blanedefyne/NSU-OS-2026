@@ -53,7 +53,7 @@ void handler(int sig) {
         write(STDERR_FILENO, "handler's lseek() caused an error\n", ERROR_LENGTH);
         _exit(EXIT_FAILURE);
     }
-    volatile sig_atomic_t handlerBytes = 0;
+    ssize_t handlerBytes = 0;
     while (handlerBytes < LEN) {
         handlerBytes += read(fd, handlerBuf, LEN - handlerBytes);
         if (handlerBytes == 0) { //if it's the end of file 

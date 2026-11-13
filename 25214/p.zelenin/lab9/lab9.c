@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
             perror("waitpid() caused an error\n");
             exit(EXIT_FAILURE);
         }
-        printf("The child - (%d) - has been terminated with code %d\n", child_pid, wstatus);
+        printf("The child (%d) - has been terminated with code %d\n", child_pid, wstatus);
         break;
     }
 

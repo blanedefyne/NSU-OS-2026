@@ -11,6 +11,8 @@ int main(int argc, char* argv[]) {
     }
 
     pid_t child_pid;
+    printf("It's the parent process - (%d)\n", getpid());
+    fflush(stdout);
 
     child_pid = fork();
 
@@ -25,13 +27,12 @@ int main(int argc, char* argv[]) {
         perror("execl() caused an error\n");
         exit(EXIT_FAILURE);
     default:
-        printf("It's the parent process - (%d)\n", getpid());
         int wstatus;
         if (waitpid(child_pid, &wstatus, 0) == -1) {
             perror("waitpid() caused an error\n");
             exit(EXIT_FAILURE);
         }
-        printf("The child (%d) - has been terminated with code %d\n", child_pid, wstatus);
+        printf("The child (%d) - has been terminated %d\n", child_pid, wstatus);
         break;
     }
 

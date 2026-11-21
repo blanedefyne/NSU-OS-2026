@@ -31,7 +31,6 @@ int main() {
     case 0:
         close(fd[0]);
         ssize_t n = getline(&line, &cap, stdin);
-        fflush(stdin);
         if (n == -1) {
             perror("getline() caused an error\n");
             exit(EXIT_FAILURE);
